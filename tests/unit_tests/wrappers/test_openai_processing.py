@@ -14,11 +14,10 @@ from openai.types.completion_usage import CompletionUsage
 from pydantic import BaseModel
 
 from langsmith import run_helpers
+from langsmith.wrappers import _openai, wrap_openai
 from langsmith.wrappers._openai import (
     _infer_invocation_params,
-    _process_chat_completion,
     _traceable_kwargs_with_ls_agent_type,
-    wrap_openai,
 )
 
 
@@ -70,7 +69,7 @@ class TestProcessParsedChatCompletion:
 
         with py_warnings.catch_warnings(record=True) as caught:
             py_warnings.simplefilter("always")
-            result = _process_chat_completion(completion, suppress_pydantic_serialization_warnings=True)
+            result = _openai._process_chat_completion(completion, suppress_pydantic_serialization_warnings=True)
 
         assert not [warning for warning in caught if _is_pydantic_serialization_warning(warning)]
         assert result["choices"][0]["message"]["parsed"] == {
@@ -99,7 +98,7 @@ class TestProcessParsedChatCompletion:
 
         with py_warnings.catch_warnings(record=True) as caught:
             py_warnings.simplefilter("always")
-            _process_chat_completion(completion, suppress_pydantic_serialization_warnings=True)
+            _openai._process_chat_completion(completion, suppress_pydantic_serialization_warnings=True)
 
         assert model_dump_calls == [False]
         assert [str(warning.message) for warning in caught] == ["unrelated warning"]
@@ -113,7 +112,7 @@ class TestProcessParsedChatCompletion:
 
         with py_warnings.catch_warnings(record=True) as caught:
             py_warnings.simplefilter("always")
-            _process_chat_completion(completion)
+            _openai._process_chat_completion(completion)
 
         assert len(caught) == 1
         assert "some other warning" in str(caught[0].message)
